@@ -1,40 +1,58 @@
 #include "binary_trees.h"
-/**
- * aux_sort - create the tree using the half element of the array
- * @parent: parent of the node to create
- * @array: sorted array
- * @begin: position where the array starts
- * @last: position where the array ends
- * Return: tree created
- */
-avl_t *aux_sort(avl_t *parent, int *array, int begin, int last)
-{
-	avl_t *root;
-	binary_tree_t *aux;
-	int mid = 0;
 
-	if (begin <= last)
-	{
-		mid = (begin + last) / 2;
-		aux = binary_tree_node((binary_tree_t *)parent, array[mid]);
-		if (aux == NULL)
-			return (NULL);
-		root = (avl_t *)aux;
-		root->left = aux_sort(root, array, begin, mid - 1);
-		root->right = aux_sort(root, array, mid + 1, last);
-		return (root);
-	}
-	return (NULL);
-}
+
 /**
- * sorted_array_to_avl - create a alv tree from sorted array
- * @array: sorted array
- * @size: size of the sorted array
- * Return: alv tree form sorted array
+ * sortedArrToAVL - recursive helper to sorted_array_to_avl: creates an AVL
+ * tree from an array of integers, which can be assumed to be sorted in
+ * ascending order and have no repeating values
+ *
+ * @array: sorted array of integers
+ * @lo_idx: leftmost index accessed in array
+ * @hi_idx: rightmost index accessed in array
+ * @parent: parent node from previous frame of recursion, or NULL for root
+ * Return: pointer to new subtree's root node, or NULL on failure
+ */
+avl_t *sortedArrToAVL(int *array, int lo_idx, int hi_idx, avl_t *parent)
+{
+	avl_t *root = NULL;
+	int mid_idx;
+
+	if (!array)
+		return (NULL);
+
+	/* base case, cannot subdivide array any further */
+	if (lo_idx > hi_idx)
+		return (NULL);
+
+	/* middle value becomes local root */
+	/* as division rounds down, weights tree slightly to right */
+	mid_idx = (lo_idx + hi_idx) / 2;
+	root = binary_tree_node(parent, array[mid_idx]);
+	if (!root)
+		return (NULL);
+
+	/* recurse to find new mid in subarray to the left of middle index */
+	root->left = sortedArrToAVL(array, lo_idx, mid_idx - 1, root);
+
+	/* recurse to find new mid in subarray to the right of middle index */
+	root->right = sortedArrToAVL(array, mid_idx + 1, hi_idx, root);
+
+	return (root);
+}
+
+
+/**
+ * sorted_array_to_avl - creates an AVL tree from an array of integers sorted
+ * in ascending order; array can be assumed to have no repeating values
+ *
+ * @array: sorted array of integers
+ * @size: amount of members in array
+ * Return: pointer to new tree's root node, or NULL on failure or empty array
  */
 avl_t *sorted_array_to_avl(int *array, size_t size)
 {
-	if (array == NULL || size == 0)
+	if (!array || size == 0)
 		return (NULL);
-	return (aux_sort(NULL, array, 0, ((int)(size)) - 1));
+
+	return (sortedArrToAVL(array, 0, (int)size - 1, NULL));
 }
